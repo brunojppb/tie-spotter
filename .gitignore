@@ -4,7 +4,8 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 
-*.webm
+/src/videos/*
+/src/screenshots/*
 
 lib-cov
 *.seed

@@ -1,6 +1,10 @@
-import { chromium } from "playwright";
+import "dotenv/config";
+import { chromium } from "playwright-extra";
+import stealth from "puppeteer-extra-plugin-stealth";
 
 async function main() {
+  chromium.use(stealth());
+
   const browser = await chromium.launch();
 
   console.log("Starting context");
@@ -31,30 +35,100 @@ async function main() {
   const page = await context.newPage();
 
   await page.goto(
-    "https://sede.administracionespublicas.gob.es/pagina/index/directorio/icpplus"
+    "https://icp.administracionelectronica.gob.es/icpplustieb/citar?p=8&locale=es"
   );
 
-  console.log("form lookup");
-  const form = await page.locator("#formulario");
+  console.log("opening up first page");
 
-  const submitInput = await form.locator('input[type="submit"]');
-  await submitInput.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(2000);
 
-  const cookies = await context.cookies();
+  await page.screenshot({
+    path: "./src/screenshots/office_selection_page.png",
+    fullPage: true,
+  });
 
-  console.log("Cookies so far: ", cookies);
+  console.log("Selecting fingerprints appointment");
+
+  const processSelect = await page.locator(".mf-input__l");
+
+  await processSelect.selectOption({ value: "4010" });
+
+  await page.waitForTimeout(1500);
+
+  await page.locator("#btnAceptar").click();
+
+  console.log("Moving to clave button page");
 
   await page.waitForTimeout(3000);
 
-  console.log("form click");
+  await page.screenshot({
+    path: "./src/screenshots/clave_button_selection.png",
+    fullPage: true,
+  });
 
-  await submitInput.click();
+  await page.locator("#btnEntrar").click();
 
-  await page.waitForTimeout(3000);
+  console.log("Moving to NIE input page");
 
-  console.log("screenshot");
+  await page.waitForTimeout(2000);
 
-  await page.screenshot({ path: "from_source.png" });
+  // Now we fill out the form with our personal data
+  // to look for available appointments
+
+  await page.screenshot({
+    path: "./src/screenshots/nie_input_screen.png",
+    fullPage: true,
+  });
+
+  // Starting with the NIE
+  await page.locator("#txtIdCitado").pressSequentially(process.env.NIE!);
+
+  // Now the full name
+  await page.locator("#txtDesCitado").pressSequentially(process.env.FULL_NAME!);
+
+  // now the nationality (206 - Brasil)
+  await page
+    .locator("#txtPaisNac")
+    .selectOption({ value: process.env.COUNTRY_CODE_FROM_SELECT! });
+
+  await page.waitForTimeout(2000);
+
+  await page.locator("#btnEnviar").click();
+
+  console.log("Moving to select cita page");
+
+  await page.waitForTimeout(2000);
+
+  // Select "solicitar Cita"
+
+  await page.screenshot({
+    path: "./src/screenshots/select_cita_page.png",
+    fullPage: true,
+  });
+
+  await page.locator("#btnEnviar").click();
+
+  await page.waitForTimeout(2000);
+
+  console.log("Checking for appointments");
+
+  await page.screenshot({
+    path: "./src/screenshots/last_screen.png",
+    fullPage: true,
+  });
+
+  try {
+    const noAppointments = await page.getByText(
+      "En este momento no hay citas disponibles."
+    );
+
+    console.log("❌ Appointments still not available...");
+  } catch (e: unknown) {
+    console.log("✅ Appointments might be available!");
+    // TODO: Notify Bruno!!!!!!!!
+  }
+
+  await page.waitForTimeout(2000);
 
   await context.close();
 }
