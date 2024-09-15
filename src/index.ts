@@ -123,12 +123,15 @@ async function main() {
     );
 
     console.log("❌ Appointments still not available...");
-  } catch (e: unknown) {
-    console.log("✅ Appointments might be available!");
-    // TODO: Notify Bruno!!!!!!!!
-  }
 
-  await page.waitForTimeout(2000);
+    await page.locator("#btnSalir").click();
+  } catch (e: unknown) {
+    await page.screenshot({
+      path: "./src/screenshots/appointments_available.png",
+      fullPage: true,
+    });
+    console.log("✅ Appointments might be available!");
+  }
 
   await context.close();
 }
