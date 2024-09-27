@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm install pnpm -g \
   && pnpm install \
-  && pnpm exec playwright install chromium
+  && pnpm exec playwright install
 
 USER nobody
 
