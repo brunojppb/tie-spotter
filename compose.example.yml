@@ -1,0 +1,16 @@
+volumes:
+  tie_spotter: {}
+
+services:
+  tie_spotter:
+    image: ghcr.io/brunojppb/tie-spotter:latest
+    container_name: tie_checker
+    environment:
+      NIE: ""
+      FULL_NAME: ""
+      COUNTRY_CODE_FROM_SELECT: ""
+      TELEGRAM_TOKEN: ""
+      TELEGRAM_CHAT_ID: ""
+
+    volumes:
+      - ./tie_spotter:/app/out

@@ -6,6 +6,8 @@ node_modules/
 
 out
 
+compose.yml
+
 lib-cov
 *.seed
 *.log
