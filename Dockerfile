@@ -9,7 +9,8 @@ RUN chown nobody /app
 COPY . .
 
 RUN npm install pnpm -g \
-  && pnpm install
+  && pnpm install \
+  && pnpm exec playwright install chromium
 
 USER nobody
 
