@@ -1,6 +1,26 @@
 import "dotenv/config";
 import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
+import * as telegram from "./telegram";
+
+function getOutputPath(date: Date): string {
+  let outputPath = process.argv[1]
+    .split("/")
+    .filter((v) => !v.includes(".ts"))
+    .filter((v) => v !== "src")
+    .join("/");
+
+  const timestamp = date.toISOString();
+  return `${outputPath}/out/${timestamp}`;
+}
+
+function getVideoOutputPath(date: Date): string {
+  return `${getOutputPath(date)}/videos`;
+}
+
+function getScreenshotOutputPath(date: Date, filename: string): string {
+  return `${getOutputPath(date)}/screenshots/${filename}`;
+}
 
 async function main() {
   chromium.use(stealth());
@@ -9,19 +29,20 @@ async function main() {
 
   console.log("Starting context");
 
-  const videoPath = process.argv[1]
-    .split("/")
-    .filter((v) => !v.includes(".ts"))
-    .join("/");
+  await telegram.sendMessage(
+    "🚨 There are citas! Go to the website now: https://icp.administracionelectronica.gob.es/icpplustieb/citar?p=8&locale=es"
+  );
 
-  console.log("video path: ", videoPath);
+  return;
+
+  const currentDate = new Date();
 
   // Create a new incognito browser context with a proper user agent
   const context = await browser.newContext({
-    userAgent:
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+    // userAgent:
+    //   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
     recordVideo: {
-      dir: `${videoPath}/videos`,
+      dir: `${getVideoOutputPath(currentDate)}`,
     },
   });
 
@@ -43,7 +64,7 @@ async function main() {
   await page.waitForTimeout(2000);
 
   await page.screenshot({
-    path: "./src/screenshots/office_selection_page.png",
+    path: getScreenshotOutputPath(currentDate, "office_selection_page.png"),
     fullPage: true,
   });
 
@@ -62,7 +83,7 @@ async function main() {
   await page.waitForTimeout(3000);
 
   await page.screenshot({
-    path: "./src/screenshots/clave_button_selection.png",
+    path: getScreenshotOutputPath(currentDate, "clave_button_selection.png"),
     fullPage: true,
   });
 
@@ -76,7 +97,7 @@ async function main() {
   // to look for available appointments
 
   await page.screenshot({
-    path: "./src/screenshots/nie_input_screen.png",
+    path: getScreenshotOutputPath(currentDate, "nie_input_screen.png"),
     fullPage: true,
   });
 
@@ -102,7 +123,7 @@ async function main() {
   // Select "solicitar Cita"
 
   await page.screenshot({
-    path: "./src/screenshots/select_cita_page.png",
+    path: getScreenshotOutputPath(currentDate, "select_cita_page.png"),
     fullPage: true,
   });
 
@@ -113,7 +134,7 @@ async function main() {
   console.log("Checking for appointments");
 
   await page.screenshot({
-    path: "./src/screenshots/last_screen.png",
+    path: getScreenshotOutputPath(currentDate, "last_screen.png"),
     fullPage: true,
   });
 
@@ -124,10 +145,11 @@ async function main() {
 
     console.log("❌ Appointments still not available...");
 
+    // Clicking on the exit button so the session gets cleaned up
     await page.locator("#btnSalir").click();
   } catch (e: unknown) {
     await page.screenshot({
-      path: "./src/screenshots/appointments_available.png",
+      path: getScreenshotOutputPath(currentDate, "appointments_available.png"),
       fullPage: true,
     });
     console.log("✅ Appointments might be available!");
