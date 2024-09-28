@@ -29,6 +29,7 @@ async function main() {
       console.error(`Attempt ${attempt} failed with `, e);
     }
     console.log(`awaiting ${fifteenMinInMills} mills for the next attempt`);
+    await sleep();
   }
 }
 
