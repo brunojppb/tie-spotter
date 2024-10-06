@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { checkAppointment } from "./checkAppointment";
+import { checkAppointment, cleanUp } from "./checkAppointment";
 
 const fifteenMinInMills = 15 * 60 * 1000;
 
@@ -21,7 +21,7 @@ async function main() {
   // Very arbitrary: Run this job for 4 days, every 15min then stop the container
   const attempts = Array.from(Array(384).keys());
 
-  for (let attempt of attempts) {
+  for (const attempt of attempts) {
     console.log(`attempt ${attempt}`);
     try {
       await checkAppointment();
@@ -36,10 +36,12 @@ async function main() {
 main()
   .then(() => {
     console.log("done");
-    process.exit(0);
+    cleanUp()?.finally(() => process.exit(0));
+    
   })
   .catch((error) => {
     console.error("Could not complete appointment check: ", error);
+    cleanUp()?.finally(() => process.exit(1));
   });
 
 function sleep() {
