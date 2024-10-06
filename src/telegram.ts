@@ -1,8 +1,11 @@
+import * as logger from './logger';
+
 export async function sendMessage(text: string): Promise<void> {
   const token = process.env.TELEGRAM_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
   const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}`;
 
+  logger.info(`Sending message to telegram: "${text}"`);
   try {
     const resp = await fetch(url, {
       method: "POST",
@@ -20,6 +23,6 @@ export async function sendMessage(text: string): Promise<void> {
 
     return Promise.reject(await resp.text());
   } catch (e: unknown) {
-    console.error("Could not notify telegram", e);
+    logger.error("Could not notify telegram", e);
   }
 }

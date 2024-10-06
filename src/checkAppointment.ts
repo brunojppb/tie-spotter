@@ -2,6 +2,7 @@ import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 import * as telegram from "./telegram";
 import type { Browser } from "@playwright/test";
+import * as logger from './logger';
 
 let browser: Browser | null = null;
 
@@ -12,7 +13,7 @@ export async function checkAppointment() {
     browser = await chromium.launch();
   }
 
-  console.log("Starting context");
+  logger.info("Starting context");
 
   const currentDate = new Date();
 
@@ -31,7 +32,7 @@ export async function checkAppointment() {
       "Object.defineProperty(navigator, 'webdriver', {get: () => false})"
     );
 
-    console.log("creating page");
+    logger.info("creating page");
 
     const page = await context.newPage();
 
@@ -39,7 +40,7 @@ export async function checkAppointment() {
       "https://icp.administracionelectronica.gob.es/icpplustieb/citar?p=8&locale=es"
     );
 
-    console.log("opening up first page");
+    logger.info("opening up first page");
 
     await page.waitForTimeout(2000);
 
@@ -48,7 +49,7 @@ export async function checkAppointment() {
       fullPage: true,
     });
 
-    console.log("Selecting fingerprints appointment");
+    logger.info("Selecting fingerprints appointment");
 
     const processSelect = await page.locator(".mf-input__l");
 
@@ -58,7 +59,7 @@ export async function checkAppointment() {
 
     await page.locator("#btnAceptar").click();
 
-    console.log("Moving to clave button page");
+    logger.info("Moving to clave button page");
 
     await page.waitForTimeout(3000);
 
@@ -69,7 +70,7 @@ export async function checkAppointment() {
 
     await page.locator("#btnEntrar").click();
 
-    console.log("Moving to NIE input page");
+    logger.info("Moving to NIE input page");
 
     await page.waitForTimeout(2000);
 
@@ -101,7 +102,7 @@ export async function checkAppointment() {
 
     await page.locator("#btnEnviar").click();
 
-    console.log("Moving to select cita page");
+    logger.info("Moving to select cita page");
 
     await page.waitForTimeout(2000);
 
@@ -116,7 +117,7 @@ export async function checkAppointment() {
 
     await page.waitForTimeout(2000);
 
-    console.log("Checking for appointments");
+    logger.info("Checking for appointments");
 
     await page.screenshot({
       path: getScreenshotOutputPath(currentDate, "last_screen.png"),
@@ -128,7 +129,7 @@ export async function checkAppointment() {
         "En este momento no hay citas disponibles."
       );
 
-      console.log("❌ Appointments still not available...");
+      logger.info("❌ Appointments still not available...");
 
       // Clicking on the exit button so the session gets cleaned up
       await page.locator("#btnSalir").click();
@@ -141,7 +142,7 @@ export async function checkAppointment() {
         fullPage: true,
       });
 
-      console.log("✅ Appointments might be available!");
+      logger.info("✅ Appointments might be available!");
       await telegram.sendMessage(
         "🚨 There are citas! Go to the website now: https://icp.administracionelectronica.gob.es/icpplustieb/citar?p=8&locale=es"
       );
