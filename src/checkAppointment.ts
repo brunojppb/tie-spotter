@@ -5,9 +5,10 @@ import type { Browser } from "@playwright/test";
 
 let browser: Browser | null = null;
 
+chromium.use(stealth());
+
 export async function checkAppointment() {
   if (browser === null) {
-    chromium.use(stealth());
     browser = await chromium.launch();
   }
 
