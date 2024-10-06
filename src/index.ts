@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { checkAppointment, cleanUp } from "./checkAppointment";
+import * as logger from "./logger";
 
 const fifteenMinInMills = 15 * 60 * 1000;
 
@@ -22,25 +23,25 @@ async function main() {
   const attempts = Array.from(Array(384).keys());
 
   for (const attempt of attempts) {
-    console.log(`attempt ${attempt}`);
+    logger.info(`attempt ${attempt}`);
     try {
       await checkAppointment();
     } catch (e: unknown) {
-      console.error(`Attempt ${attempt} failed with `, e);
+      logger.error(`Attempt ${attempt} failed with `, e);
     }
-    console.log(`awaiting ${fifteenMinInMills} mills for the next attempt`);
+    logger.info(`awaiting ${fifteenMinInMills} mills for the next attempt`);
     await sleep();
   }
 }
 
 main()
   .then(() => {
-    console.log("done");
+    logger.info("done");
     cleanUp()?.finally(() => process.exit(0));
     
   })
   .catch((error) => {
-    console.error("Could not complete appointment check: ", error);
+    logger.error("Could not complete appointment check: ", error);
     cleanUp()?.finally(() => process.exit(1));
   });
 
